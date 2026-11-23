@@ -1,0 +1,518 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isEmailVerified() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isEmailVerified() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'rashmisondhi456@gmail.com'
+      );
+    }
+
+    function isValidSkillsList(arr) {
+      return arr is list && arr.size() <= 15 && (arr.size() == 0 || (arr[0] is string && arr[0].size() <= 60));
+    }
+
+    function isValidCategory(cat) {
+      return cat is string && cat.size() <= 60 && cat in [
+        'Accountant',
+        'Accounting & Finance',
+        'Administration & Facilities',
+        'Architect / Interior Designer',
+        'Back Office / Data Entry',
+        'Banking, Financial Services & BFSI',
+        'Beautician',
+        'Blue Collar & Skilled Trades',
+        'Business Development & B2B Sales',
+        'Carpenter',
+        'Cashier',
+        'Construction, Civil & Architecture',
+        'Content Writer',
+        'Cook / Chef',
+        'Customer Support & Service',
+        'Customer Support / TeleCaller',
+        'Delivery',
+        'Digital Marketing',
+        'Digital Marketing & Creative Media',
+        'Driver',
+        'Driver, Delivery & Fleet',
+        'Education & Training',
+        'Electrician',
+        'Electrician, Fitter & Welder',
+        'Event Management',
+        'Executive & Management',
+        'Fashion Designer',
+        'Field Sales',
+        'FMCG & Business Development',
+        'General Management & Strategy',
+        'Graphic / Web Designer',
+        'Hardware / Network Engineer',
+        'Healthcare & Clinical',
+        'Hospitality & Travel',
+        'Housekeeping',
+        'Housekeeping, Security & Helper',
+        'Human Resources & Talent',
+        'Import, Export & International Trade',
+        'IT & Data Engineering',
+        'IT / Software / Data Analyst',
+        'Journalism, Content & PR',
+        'Key Account & Client Management',
+        'Lab Technician / Pharmacist',
+        'Labour/Helper',
+        'Legal',
+        'Legal, Audit & Compliance',
+        'Logistics & Supply Chain',
+        'Manufacturing',
+        'Manufacturing & Operations',
+        'Marketing',
+        'Mechanic',
+        'Mechanical & Electrical Engineering',
+        'Nurse / Compounder',
+        'Nursing, Pharma & Diagnostics',
+        'Operations & Plant Management',
+        'Painter',
+        'Peon',
+        'Plumber',
+        'Procurement & Purchase',
+        'Quality Assurance & HSE Safety',
+        'Receptionist',
+        'Recruiter / HR / Admin',
+        'Refrigerator & AC Technician',
+        'Research & Analytics',
+        'Retail & Store Operations',
+        'Retail / Counter Sales',
+        'Sales & Distribution',
+        'Sales / Business Development',
+        'Security Guard',
+        'Software & Cloud Engineering',
+        'Spa',
+        'Teacher / Tutor',
+        'Technician',
+        'Telesales & BPO',
+        'Telesales / Telemarketing',
+        'Trainer',
+        'UI/UX & Product Design',
+        'Vendor & Contract Management',
+        'Video Editor',
+        'Waiter / Steward',
+        'Ward Boy',
+        'Warehouse / Logistics',
+        'Warehousing & Inventory',
+        'X-Ray, Radiology & Lab Tech',
+        'Yield, Process & Industrial Ops',
+        'Zonal & Regional Business'
+      ];
+    }
+
+    function isValidScope(scope) {
+      return scope is string && scope.size() <= 20 && scope in ['domestic', 'international'];
+    }
+
+    // --- Validation Blueprints ---
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'organization', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'organization', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.organization is string && data.organization.size() >= 1 && data.organization.size() <= 120
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'provider', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'provider', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.provider is string && data.provider.size() >= 1 && data.provider.size() <= 64
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCandidate(data, userId, candidateId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'name', 'designation', 'category', 'location',
+          'country', 'scope', 'experience', 'noticePeriod', 'sourceDate',
+          'skills', 'status', 'aiScore', 'encryptedPii', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'name', 'designation', 'category', 'location',
+          'country', 'scope', 'experience', 'noticePeriod', 'sourceDate',
+          'skills', 'status', 'aiScore', 'encryptedPii', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == candidateId
+        && isValidId(data.ownerId) && data.ownerId == userId
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.designation is string && data.designation.size() >= 1 && data.designation.size() <= 160
+        && isValidCategory(data.category)
+        && data.location is string && data.location.size() >= 1 && data.location.size() <= 120
+        && data.country is string && data.country.size() >= 1 && data.country.size() <= 80
+        && isValidScope(data.scope)
+        && data.experience is string && data.experience.size() <= 60
+        && data.noticePeriod is string && data.noticePeriod.size() <= 60
+        && data.sourceDate is string && data.sourceDate.size() <= 40
+        && isValidSkillsList(data.skills)
+        && data.status is string && data.status.size() <= 30
+        && data.status in ['sourced', 'screened', 'shortlisted', 'interview_scheduled', 'hired', 'rejected']
+        && data.aiScore is number && data.aiScore >= 0 && data.aiScore <= 100
+        && data.encryptedPii is string && data.encryptedPii.size() >= 1 && data.encryptedPii.size() <= 20000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidJobPosting(data, userId, jobId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'title', 'category', 'department', 'scope',
+          'country', 'location', 'visaSponsorship', 'experience', 'salaryRange',
+          'openings', 'description', 'skillsRequired', 'status', 'postedDate',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'title', 'companyName', 'category', 'industry', 'department', 'scope',
+          'country', 'location', 'visaSponsorship', 'genderPreference', 'noticePeriod',
+          'experience', 'salaryRange', 'openings', 'description', 'skillsRequired',
+          'status', 'postedDate', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == jobId
+        && isValidId(data.ownerId) && data.ownerId == userId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 120))
+        && isValidCategory(data.category)
+        && (!('industry' in data) || (data.industry is string && data.industry.size() <= 100))
+        && data.department is string && data.department.size() <= 120
+        && isValidScope(data.scope)
+        && data.country is string && data.country.size() >= 1 && data.country.size() <= 80
+        && data.location is string && data.location.size() >= 1 && data.location.size() <= 140
+        && data.visaSponsorship is bool
+        && (!('genderPreference' in data) || (data.genderPreference is string && data.genderPreference.size() <= 20 && data.genderPreference in ['Any', 'Male', 'Female']))
+        && (!('noticePeriod' in data) || (data.noticePeriod is string && data.noticePeriod.size() <= 60))
+        && data.experience is string && data.experience.size() <= 60
+        && data.salaryRange is string && data.salaryRange.size() <= 80
+        && data.openings is number && data.openings >= 1 && data.openings <= 1000
+        && data.description is string && data.description.size() <= 4000
+        && isValidSkillsList(data.skillsRequired)
+        && data.status is string && data.status.size() <= 20 && data.status in ['active', 'draft', 'closed']
+        && data.postedDate is string && data.postedDate.size() <= 40
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPublicJob(data, publicJobId) {
+      return data.keys().hasAll([
+          'id', 'jobId', 'ownerId', 'title', 'companyName', 'category', 'industry',
+          'department', 'scope', 'country', 'location', 'visaSponsorship',
+          'genderPreference', 'noticePeriod', 'experience', 'salaryRange', 'openings',
+          'description', 'skillsRequired', 'status', 'postedDate', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'jobId', 'ownerId', 'title', 'companyName', 'category', 'industry',
+          'department', 'scope', 'country', 'location', 'visaSponsorship',
+          'genderPreference', 'noticePeriod', 'experience', 'salaryRange', 'openings',
+          'description', 'skillsRequired', 'status', 'postedDate', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == publicJobId
+        && isValidId(data.jobId)
+        && isValidId(data.ownerId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.companyName is string && data.companyName.size() <= 120
+        && isValidCategory(data.category)
+        && data.industry is string && data.industry.size() <= 100
+        && data.department is string && data.department.size() <= 120
+        && isValidScope(data.scope)
+        && data.country is string && data.country.size() >= 1 && data.country.size() <= 80
+        && data.location is string && data.location.size() >= 1 && data.location.size() <= 140
+        && data.visaSponsorship is bool
+        && data.genderPreference is string && data.genderPreference.size() <= 20 && data.genderPreference in ['Any', 'Male', 'Female']
+        && data.noticePeriod is string && data.noticePeriod.size() <= 60
+        && data.experience is string && data.experience.size() <= 60
+        && data.salaryRange is string && data.salaryRange.size() <= 80
+        && data.openings is number && data.openings >= 1 && data.openings <= 1000
+        && data.description is string && data.description.size() <= 4000
+        && isValidSkillsList(data.skillsRequired)
+        && data.status is string && data.status.size() <= 20 && data.status in ['active', 'draft', 'closed']
+        && data.postedDate is string && data.postedDate.size() <= 40
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidJobApplication(data, userId, applicationId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'jobId', 'jobTitle', 'companyName', 'applicantName',
+          'phone', 'email', 'currentLocation', 'gender', 'currentCompany',
+          'experience', 'noticePeriod', 'currentSalary', 'expectedSalary',
+          'skills', 'resumeLink', 'coverNote', 'sourcePlatform', 'appliedDate',
+          'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'jobId', 'jobTitle', 'companyName', 'applicantName',
+          'phone', 'email', 'currentLocation', 'gender', 'currentCompany',
+          'experience', 'noticePeriod', 'currentSalary', 'expectedSalary',
+          'skills', 'resumeLink', 'coverNote', 'sourcePlatform', 'appliedDate',
+          'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == applicationId
+        && isValidId(data.ownerId) && data.ownerId == userId
+        && isValidId(data.jobId)
+        && data.jobTitle is string && data.jobTitle.size() >= 1 && data.jobTitle.size() <= 160
+        && data.companyName is string && data.companyName.size() <= 120
+        && data.applicantName is string && data.applicantName.size() >= 1 && data.applicantName.size() <= 120
+        && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 30
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.currentLocation is string && data.currentLocation.size() >= 1 && data.currentLocation.size() <= 120
+        && data.gender is string && data.gender.size() <= 20 && data.gender in ['Any', 'Male', 'Female']
+        && data.currentCompany is string && data.currentCompany.size() <= 120
+        && data.experience is string && data.experience.size() >= 1 && data.experience.size() <= 60
+        && data.noticePeriod is string && data.noticePeriod.size() >= 1 && data.noticePeriod.size() <= 60
+        && data.currentSalary is string && data.currentSalary.size() <= 60
+        && data.expectedSalary is string && data.expectedSalary.size() <= 60
+        && isValidSkillsList(data.skills)
+        && data.resumeLink is string && data.resumeLink.size() <= 500
+        && data.coverNote is string && data.coverNote.size() <= 2000
+        && data.sourcePlatform is string && data.sourcePlatform.size() >= 1 && data.sourcePlatform.size() <= 40
+        && data.appliedDate is string && data.appliedDate.size() >= 1 && data.appliedDate.size() <= 40
+        && data.status is string && data.status.size() <= 20 && data.status in ['new', 'reviewed', 'shortlisted', 'rejected']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidInterview(data, userId, interviewId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'candidateId', 'candidateName', 'role',
+          'interviewType', 'locationAddress', 'dateTime', 'status',
+          'interviewer', 'encryptedDetails', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'candidateId', 'candidateName', 'role',
+          'interviewType', 'locationAddress', 'dateTime', 'status',
+          'interviewer', 'encryptedDetails', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == interviewId
+        && isValidId(data.ownerId) && data.ownerId == userId
+        && isValidId(data.candidateId)
+        && data.candidateName is string && data.candidateName.size() >= 1 && data.candidateName.size() <= 120
+        && data.role is string && data.role.size() >= 1 && data.role.size() <= 160
+        && data.interviewType is string && data.interviewType.size() <= 30
+        && data.interviewType in ['in_person_durg', 'google_meet', 'telephonic']
+        && data.locationAddress is string && data.locationAddress.size() <= 250
+        && data.dateTime is string && data.dateTime.size() <= 80
+        && data.status is string && data.status.size() <= 30
+        && data.status in ['scheduled', 'completed', 'cancelled', 'rescheduled']
+        && data.interviewer is string && data.interviewer.size() <= 140
+        && data.encryptedDetails is string && data.encryptedDetails.size() >= 1 && data.encryptedDetails.size() <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Admin Lookup Collection (Read-Only for Self, No Client Writes) ---
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isOwner(adminId);
+      allow list, create, update, delete: if false;
+    }
+
+    // --- Public Job Snapshots (Zero PII, Get by Exact Share Link ID Only) ---
+    match /publicJobs/{publicJobId} {
+      allow get: if isValidId(publicJobId);
+      allow list: if isOwner(existing().ownerId) || isAdmin();
+      allow create: if isValidId(publicJobId)
+        && isOwner(incoming().ownerId)
+        && isValidPublicJob(incoming(), publicJobId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/users/$(incoming().ownerId));
+      allow update: if isValidId(publicJobId)
+        && isValidPublicJob(incoming(), publicJobId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().id == existing().id
+        && incoming().jobId == existing().jobId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (isAdmin() || isOwner(existing().ownerId));
+      allow delete: if isValidId(publicJobId) && (isOwner(existing().ownerId) || isAdmin());
+    }
+
+    // --- User Workspace Profiles ---
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if false;
+      allow create: if isValidId(userId) && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isValidUserProfile(incoming(), userId) && (
+        (isOwner(userId) || isAdmin())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'organization', 'updatedAt'])
+      );
+      allow delete: if false;
+
+      // Isolated Private PII Subcollection
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && existing().uid == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(docId) && isOwner(userId)
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(docId) && isValidUserPrivateInfo(incoming(), userId) && (
+          (isOwner(userId) || isAdmin())
+          && incoming().uid == existing().uid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'provider', 'updatedAt'])
+        );
+        allow delete: if false;
+      }
+
+      // Encrypted Candidate Records Subcollection
+      match /candidates/{candidateId} {
+        allow get: if isValidId(userId) && isValidId(candidateId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(candidateId) && isOwner(userId)
+          && isValidCandidate(incoming(), userId, candidateId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow update: if isValidId(userId) && isValidId(candidateId)
+          && isValidCandidate(incoming(), userId, candidateId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            isAdmin() || (
+              isOwner(userId)
+              && existing().status != 'hired'
+              && (
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'aiScore', 'encryptedPii', 'updatedAt'])
+              )
+            )
+          );
+        allow delete: if isValidId(userId) && isValidId(candidateId) && (isOwner(userId) || isAdmin());
+      }
+
+      // Domestic & International Job Postings Subcollection
+      match /jobs/{jobId} {
+        allow get: if isValidId(userId) && isValidId(jobId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(jobId) && isOwner(userId)
+          && isValidJobPosting(incoming(), userId, jobId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow update: if isValidId(userId) && isValidId(jobId)
+          && isValidJobPosting(incoming(), userId, jobId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            isAdmin() || (
+              isOwner(userId)
+              && existing().status != 'closed'
+              && (
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'title', 'companyName', 'category', 'industry', 'department', 'scope', 'country', 'location',
+                  'visaSponsorship', 'genderPreference', 'noticePeriod', 'experience', 'salaryRange', 'openings',
+                  'description', 'skillsRequired', 'status', 'updatedAt'
+                ])
+              )
+            )
+          );
+        allow delete: if isValidId(userId) && isValidId(jobId) && (isOwner(userId) || isAdmin());
+      }
+
+      // Direct Applicant Submissions (Write-only public create gated by active publicJob; owner/admin read/manage)
+      match /applications/{applicationId} {
+        allow get: if isValidId(userId) && isValidId(applicationId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(applicationId)
+          && isValidJobApplication(incoming(), userId, applicationId)
+          && incoming().status == 'new'
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/publicJobs/$(userId + '__' + incoming().jobId))
+          && get(/databases/$(database)/documents/publicJobs/$(userId + '__' + incoming().jobId)).data.status == 'active';
+        allow update: if isValidId(userId) && isValidId(applicationId)
+          && isValidJobApplication(incoming(), userId, applicationId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().jobId == existing().jobId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            isAdmin() || (
+              isOwner(userId)
+              && existing().status != 'rejected'
+              && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+            )
+          );
+        allow delete: if isValidId(userId) && isValidId(applicationId) && (isOwner(userId) || isAdmin());
+      }
+
+      // Encrypted Interview Schedules Subcollection
+      match /interviews/{interviewId} {
+        allow get: if isValidId(userId) && isValidId(interviewId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(interviewId) && isOwner(userId)
+          && isValidInterview(incoming(), userId, interviewId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId)/candidates/$(incoming().candidateId));
+        allow update: if isValidId(userId) && isValidId(interviewId)
+          && isValidInterview(incoming(), userId, interviewId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().candidateId == existing().candidateId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            isAdmin() || (
+              isOwner(userId)
+              && !(existing().status in ['completed', 'cancelled'])
+              && (
+                incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) ||
+                incoming().diff(existing()).affectedKeys().hasOnly(['dateTime', 'interviewType', 'locationAddress', 'interviewer', 'encryptedDetails', 'status', 'updatedAt'])
+              )
+            )
+          );
+        allow delete: if isValidId(userId) && isValidId(interviewId) && (isOwner(userId) || isAdmin());
+      }
+    }
+  }
+}

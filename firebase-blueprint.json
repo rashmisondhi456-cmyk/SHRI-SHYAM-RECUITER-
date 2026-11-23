@@ -1,0 +1,756 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated recruiter workspace profile (non-PII fields).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "organization": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "organization", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated private PII for the authenticated recruiter.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "provider": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "provider", "createdAt", "updatedAt"]
+    },
+    "CandidateRecord": {
+      "title": "CandidateRecord",
+      "description": "Candidate profile with AES-256-GCM encrypted PII payload.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "designation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60,
+          "enum": [
+            "Accountant",
+            "Accounting & Finance",
+            "Administration & Facilities",
+            "Architect / Interior Designer",
+            "Back Office / Data Entry",
+            "Banking, Financial Services & BFSI",
+            "Beautician",
+            "Blue Collar & Skilled Trades",
+            "Business Development & B2B Sales",
+            "Carpenter",
+            "Cashier",
+            "Construction, Civil & Architecture",
+            "Content Writer",
+            "Cook / Chef",
+            "Customer Support & Service",
+            "Customer Support / TeleCaller",
+            "Delivery",
+            "Digital Marketing",
+            "Digital Marketing & Creative Media",
+            "Driver",
+            "Driver, Delivery & Fleet",
+            "Education & Training",
+            "Electrician",
+            "Electrician, Fitter & Welder",
+            "Event Management",
+            "Executive & Management",
+            "Fashion Designer",
+            "Field Sales",
+            "FMCG & Business Development",
+            "General Management & Strategy",
+            "Graphic / Web Designer",
+            "Hardware / Network Engineer",
+            "Healthcare & Clinical",
+            "Hospitality & Travel",
+            "Housekeeping",
+            "Housekeeping, Security & Helper",
+            "Human Resources & Talent",
+            "Import, Export & International Trade",
+            "IT & Data Engineering",
+            "IT / Software / Data Analyst",
+            "Journalism, Content & PR",
+            "Key Account & Client Management",
+            "Lab Technician / Pharmacist",
+            "Labour/Helper",
+            "Legal",
+            "Legal, Audit & Compliance",
+            "Logistics & Supply Chain",
+            "Manufacturing",
+            "Manufacturing & Operations",
+            "Marketing",
+            "Mechanic",
+            "Mechanical & Electrical Engineering",
+            "Nurse / Compounder",
+            "Nursing, Pharma & Diagnostics",
+            "Operations & Plant Management",
+            "Painter",
+            "Peon",
+            "Plumber",
+            "Procurement & Purchase",
+            "Quality Assurance & HSE Safety",
+            "Receptionist",
+            "Recruiter / HR / Admin",
+            "Refrigerator & AC Technician",
+            "Research & Analytics",
+            "Retail & Store Operations",
+            "Retail / Counter Sales",
+            "Sales & Distribution",
+            "Sales / Business Development",
+            "Security Guard",
+            "Software & Cloud Engineering",
+            "Spa",
+            "Teacher / Tutor",
+            "Technician",
+            "Telesales & BPO",
+            "Telesales / Telemarketing",
+            "Trainer",
+            "UI/UX & Product Design",
+            "Vendor & Contract Management",
+            "Video Editor",
+            "Waiter / Steward",
+            "Ward Boy",
+            "Warehouse / Logistics",
+            "Warehousing & Inventory",
+            "X-Ray, Radiology & Lab Tech",
+            "Yield, Process & Industrial Ops",
+            "Zonal & Regional Business"
+          ]
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["domestic", "international"]
+        },
+        "experience": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "noticePeriod": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "sourceDate": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "skills": {
+          "type": "array",
+          "description": "Up to 15 skill tags"
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 30,
+          "enum": [
+            "sourced",
+            "screened",
+            "shortlisted",
+            "interview_scheduled",
+            "hired",
+            "rejected"
+          ]
+        },
+        "aiScore": {
+          "type": "number"
+        },
+        "encryptedPii": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "name",
+        "designation",
+        "category",
+        "location",
+        "country",
+        "scope",
+        "experience",
+        "noticePeriod",
+        "sourceDate",
+        "skills",
+        "status",
+        "aiScore",
+        "encryptedPii",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "JobPostingRecord": {
+      "title": "JobPostingRecord",
+      "description": "Domestic or international job requisition managed by Shri Shyam Consulting.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "companyName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60,
+          "enum": [
+            "Accountant",
+            "Accounting & Finance",
+            "Administration & Facilities",
+            "Architect / Interior Designer",
+            "Back Office / Data Entry",
+            "Banking, Financial Services & BFSI",
+            "Beautician",
+            "Blue Collar & Skilled Trades",
+            "Business Development & B2B Sales",
+            "Carpenter",
+            "Cashier",
+            "Construction, Civil & Architecture",
+            "Content Writer",
+            "Cook / Chef",
+            "Customer Support & Service",
+            "Customer Support / TeleCaller",
+            "Delivery",
+            "Digital Marketing",
+            "Digital Marketing & Creative Media",
+            "Driver",
+            "Driver, Delivery & Fleet",
+            "Education & Training",
+            "Electrician",
+            "Electrician, Fitter & Welder",
+            "Event Management",
+            "Executive & Management",
+            "Fashion Designer",
+            "Field Sales",
+            "FMCG & Business Development",
+            "General Management & Strategy",
+            "Graphic / Web Designer",
+            "Hardware / Network Engineer",
+            "Healthcare & Clinical",
+            "Hospitality & Travel",
+            "Housekeeping",
+            "Housekeeping, Security & Helper",
+            "Human Resources & Talent",
+            "Import, Export & International Trade",
+            "IT & Data Engineering",
+            "IT / Software / Data Analyst",
+            "Journalism, Content & PR",
+            "Key Account & Client Management",
+            "Lab Technician / Pharmacist",
+            "Labour/Helper",
+            "Legal",
+            "Legal, Audit & Compliance",
+            "Logistics & Supply Chain",
+            "Manufacturing",
+            "Manufacturing & Operations",
+            "Marketing",
+            "Mechanic",
+            "Mechanical & Electrical Engineering",
+            "Nurse / Compounder",
+            "Nursing, Pharma & Diagnostics",
+            "Operations & Plant Management",
+            "Painter",
+            "Peon",
+            "Plumber",
+            "Procurement & Purchase",
+            "Quality Assurance & HSE Safety",
+            "Receptionist",
+            "Recruiter / HR / Admin",
+            "Refrigerator & AC Technician",
+            "Research & Analytics",
+            "Retail & Store Operations",
+            "Retail / Counter Sales",
+            "Sales & Distribution",
+            "Sales / Business Development",
+            "Security Guard",
+            "Software & Cloud Engineering",
+            "Spa",
+            "Teacher / Tutor",
+            "Technician",
+            "Telesales & BPO",
+            "Telesales / Telemarketing",
+            "Trainer",
+            "UI/UX & Product Design",
+            "Vendor & Contract Management",
+            "Video Editor",
+            "Waiter / Steward",
+            "Ward Boy",
+            "Warehouse / Logistics",
+            "Warehousing & Inventory",
+            "X-Ray, Radiology & Lab Tech",
+            "Yield, Process & Industrial Ops",
+            "Zonal & Regional Business"
+          ]
+        },
+        "industry": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["domestic", "international"]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "visaSponsorship": {
+          "type": "boolean"
+        },
+        "genderPreference": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["Any", "Male", "Female"]
+        },
+        "noticePeriod": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "experience": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "salaryRange": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "openings": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "skillsRequired": {
+          "type": "array",
+          "description": "Up to 15 skill tags"
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 20,
+          "enum": ["active", "draft", "closed"]
+        },
+        "postedDate": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "title",
+        "category",
+        "department",
+        "scope",
+        "country",
+        "location",
+        "visaSponsorship",
+        "experience",
+        "salaryRange",
+        "openings",
+        "description",
+        "skillsRequired",
+        "status",
+        "postedDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InterviewRecord": {
+      "title": "InterviewRecord",
+      "description": "Scheduled candidate interview with AES-256-GCM encrypted contact and meeting details.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "candidateId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "candidateName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "interviewType": {
+          "type": "string",
+          "maxLength": 30,
+          "enum": ["in_person_durg", "google_meet", "telephonic"]
+        },
+        "locationAddress": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "dateTime": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 30,
+          "enum": ["scheduled", "completed", "cancelled", "rescheduled"]
+        },
+        "interviewer": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "encryptedDetails": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "candidateId",
+        "candidateName",
+        "role",
+        "interviewType",
+        "locationAddress",
+        "dateTime",
+        "status",
+        "interviewer",
+        "encryptedDetails",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PublicJobRecord": {
+      "title": "PublicJobRecord",
+      "description": "Public read-only snapshot of an active job posting for social media applicant links (no PII).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "jobId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "companyName": { "type": "string", "maxLength": 120 },
+        "category": {
+          "type": "string",
+          "maxLength": 60,
+          "enum": [
+            "Accountant",
+            "Accounting & Finance",
+            "Administration & Facilities",
+            "Architect / Interior Designer",
+            "Back Office / Data Entry",
+            "Banking, Financial Services & BFSI",
+            "Beautician",
+            "Blue Collar & Skilled Trades",
+            "Business Development & B2B Sales",
+            "Carpenter",
+            "Cashier",
+            "Construction, Civil & Architecture",
+            "Content Writer",
+            "Cook / Chef",
+            "Customer Support & Service",
+            "Customer Support / TeleCaller",
+            "Delivery",
+            "Digital Marketing",
+            "Digital Marketing & Creative Media",
+            "Driver",
+            "Driver, Delivery & Fleet",
+            "Education & Training",
+            "Electrician",
+            "Electrician, Fitter & Welder",
+            "Event Management",
+            "Executive & Management",
+            "Fashion Designer",
+            "Field Sales",
+            "FMCG & Business Development",
+            "General Management & Strategy",
+            "Graphic / Web Designer",
+            "Hardware / Network Engineer",
+            "Healthcare & Clinical",
+            "Hospitality & Travel",
+            "Housekeeping",
+            "Housekeeping, Security & Helper",
+            "Human Resources & Talent",
+            "Import, Export & International Trade",
+            "IT & Data Engineering",
+            "IT / Software / Data Analyst",
+            "Journalism, Content & PR",
+            "Key Account & Client Management",
+            "Lab Technician / Pharmacist",
+            "Labour/Helper",
+            "Legal",
+            "Legal, Audit & Compliance",
+            "Logistics & Supply Chain",
+            "Manufacturing",
+            "Manufacturing & Operations",
+            "Marketing",
+            "Mechanic",
+            "Mechanical & Electrical Engineering",
+            "Nurse / Compounder",
+            "Nursing, Pharma & Diagnostics",
+            "Operations & Plant Management",
+            "Painter",
+            "Peon",
+            "Plumber",
+            "Procurement & Purchase",
+            "Quality Assurance & HSE Safety",
+            "Receptionist",
+            "Recruiter / HR / Admin",
+            "Refrigerator & AC Technician",
+            "Research & Analytics",
+            "Retail & Store Operations",
+            "Retail / Counter Sales",
+            "Sales & Distribution",
+            "Sales / Business Development",
+            "Security Guard",
+            "Software & Cloud Engineering",
+            "Spa",
+            "Teacher / Tutor",
+            "Technician",
+            "Telesales & BPO",
+            "Telesales / Telemarketing",
+            "Trainer",
+            "UI/UX & Product Design",
+            "Vendor & Contract Management",
+            "Video Editor",
+            "Waiter / Steward",
+            "Ward Boy",
+            "Warehouse / Logistics",
+            "Warehousing & Inventory",
+            "X-Ray, Radiology & Lab Tech",
+            "Yield, Process & Industrial Ops",
+            "Zonal & Regional Business"
+          ]
+        },
+        "industry": { "type": "string", "maxLength": 100 },
+        "department": { "type": "string", "maxLength": 120 },
+        "scope": { "type": "string", "maxLength": 20, "enum": ["domestic", "international"] },
+        "country": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "location": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "visaSponsorship": { "type": "boolean" },
+        "genderPreference": { "type": "string", "maxLength": 20, "enum": ["Any", "Male", "Female"] },
+        "noticePeriod": { "type": "string", "maxLength": 60 },
+        "experience": { "type": "string", "maxLength": 60 },
+        "salaryRange": { "type": "string", "maxLength": 80 },
+        "openings": { "type": "number" },
+        "description": { "type": "string", "maxLength": 4000 },
+        "skillsRequired": { "type": "array", "description": "Up to 15 skill tags" },
+        "status": { "type": "string", "maxLength": 20, "enum": ["active", "draft", "closed"] },
+        "postedDate": { "type": "string", "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "jobId", "ownerId", "title", "companyName", "category", "industry",
+        "department", "scope", "country", "location", "visaSponsorship",
+        "genderPreference", "noticePeriod", "experience", "salaryRange", "openings",
+        "description", "skillsRequired", "status", "postedDate", "createdAt", "updatedAt"
+      ]
+    },
+    "JobApplicationRecord": {
+      "title": "JobApplicationRecord",
+      "description": "Direct applicant submission from shared social media job links for Excel sheet export & ATS sync.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "jobId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "jobTitle": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "companyName": { "type": "string", "maxLength": 120 },
+        "applicantName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 5, "maxLength": 30 },
+        "email": { "type": "string", "minLength": 3, "maxLength": 254 },
+        "currentLocation": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "gender": { "type": "string", "maxLength": 20, "enum": ["Any", "Male", "Female"] },
+        "currentCompany": { "type": "string", "maxLength": 120 },
+        "experience": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "noticePeriod": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "currentSalary": { "type": "string", "maxLength": 60 },
+        "expectedSalary": { "type": "string", "maxLength": 60 },
+        "skills": { "type": "array", "description": "Up to 15 skill tags" },
+        "resumeLink": { "type": "string", "maxLength": 500 },
+        "coverNote": { "type": "string", "maxLength": 2000 },
+        "sourcePlatform": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "appliedDate": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "status": { "type": "string", "maxLength": 20, "enum": ["new", "reviewed", "shortlisted", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "ownerId", "jobId", "jobTitle", "companyName", "applicantName",
+        "phone", "email", "currentLocation", "gender", "currentCompany",
+        "experience", "noticePeriod", "currentSalary", "expectedSalary",
+        "skills", "resumeLink", "coverNote", "sourcePlatform", "appliedDate",
+        "status", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Recruiter workspace profile root"
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Recruiter isolated private PII"
+    },
+    "/users/{userId}/candidates/{candidateId}": {
+      "schema": { "$ref": "#/entities/CandidateRecord" },
+      "description": "Encrypted candidate profiles owned by recruiter"
+    },
+    "/users/{userId}/jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/JobPostingRecord" },
+      "description": "Domestic and international job postings owned by recruiter"
+    },
+    "/users/{userId}/interviews/{interviewId}": {
+      "schema": { "$ref": "#/entities/InterviewRecord" },
+      "description": "Encrypted interview schedules owned by recruiter"
+    },
+    "/users/{userId}/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/JobApplicationRecord" },
+      "description": "Direct applicant job submissions for Excel sheet & ATS management"
+    },
+    "/publicJobs/{publicJobId}": {
+      "schema": { "$ref": "#/entities/PublicJobRecord" },
+      "description": "Public job snapshots for social media share links"
+    }
+  }
+}

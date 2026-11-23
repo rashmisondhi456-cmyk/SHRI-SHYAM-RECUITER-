@@ -1,0 +1,7 @@
+{
+  "name": "Shri Shyam Consulting - Naukri Resdex & AI Calling ATS",
+  "description": "Enterprise Naukri Resdex recruitment platform with candidate database search, AI calling & screening agent, automated interview scheduling, and applicant tracking for Shri Shyam Consulting, Durg CG.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
